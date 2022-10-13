@@ -1,0 +1,94 @@
+---
+title: "sgot"
+author: "Berrie Zielman"
+date: "2-6-2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Joint model for survival and longitudinal measurements
+
+```{r jointmodel}
+library(lcmm)
+library(lattice)
+library(smoothJM)
+data("pbc2", package = "JM")
+pbc2$lsgot <- log(pbc2$SGOT)
+#pbc2$lsgot <- log(pbc2$serBilir)
+pbc2$id <- as.numeric(pbc2$id)
+model1 <- smoothJM(lsgot ~ year + (1 + year | id), maxiter = 255, 
+                survival = Surv(years, status2) ~ factor(drug) + factor(sex),
+                data = pbc2, n1 = 3, n2 = 3, rightskewed = c(F,T))
+oldpar <- par()
+print(model1$loglik)
+print(model1$niter)
+par(mfrow=c(1,2))
+model1$survmodel
+model1$weibull
+model1$baseline
+model1$btil
+model1$best
+plotrandomeffects(model1, which = "intercept", xlab = "intercept")
+plotrandomeffects(model1, which = "slope" , xlab = "slope")
+
+
+
+```
+## Plots for linear model
+```{r explortory_analysis}
+PBC.samp <- subset(pbc2, id %in% c(2,7,8,70,81, 51,90,68,93,
+                                   39,148,173,200, 19,242,290))
+ 
+xyplot(log(SGOT) ~ year | id, data = PBC.samp,
+       type = c("p", "r"), lwd = 2, layout = c(4, 4),
+       as.table = TRUE, ylab = "log(sgot)",
+       xlab = "Time (years)")
+```
+
+## Plots for Survival and Markertrajectory
+
+
+```{r survival, echo=TRUE}
+plot(model1$jlcmm, which = 'survival',col=rep(c('blue','red','black','green'),each=3),
+     lty=rep(1:4, times=3))
+datnew <- data.frame(year = seq(0, 10, length = 100))
+datnew$sex <- "female"
+datnew$age <- 55
+datnew$drug <- "D-penicil"
+pred_lme <- predictY(model1$jlcmm, datnew, var.time = "year")
+plot(pred_lme, lwd = 2, type = "l", bty = "l", xlab = "Years", ylab = "log(sgot)",col=rep(c('blue','red','black'),each=3),lty=rep(1:3, times=3), lwd = 2)
+
+```
+
+## Predictions
+
+```{r predictions, echo=TRUE}
+par(mfrow=c(1,2))
+patient2 <- model1$data[which(model1$data$id == 2), ]
+dynp <- dynpred(model1$jlcmm, patient2, landmark = c(5,7), var.time = "year",
+                horizon = c(1,2,3,4,5,6,7,8,10),
+                draws = FALSE)
+patient7 <- model1$data[which(model1$data$id == 288), ]  #was 7
+dynp2 <- dynpred(model1$jlcmm, patient7, landmark = c(3,5), var.time = "year",
+                horizon = c(1,2,3,4,5,6,7,8,10),
+                draws = FALSE)
+plot(dynp, landmark = 5, ylim = c(-1, 6, 0, 1), col = 1, pch = 20,
+     ylab = "log(sgot)", main = "Patient 2", xlab = "time in years")
+
+plot(dynp, landmark = 7, ylim = c(-1, 6, 0, 1), col = 1, pch = 20,
+     ylab = "log(sgot)", main = "Patient 2, landmark 7", xlab = "time in years")
+
+patient7[,'year']
+
+plot(dynp2, landmark = 3, ylim = c(-1, 6, 0, 1), col = 1, pch = 20,
+     ylab = "log(sgot)", main = "Patient 7", xlab = "time in years")
+
+plot(dynp2, landmark = 5, ylim = c(-1, 6, 0, 1), col = 1, pch = 20,
+     ylab = "log(sgot)", main = "Patient 7, landmark 7", xlab = "time in years")
+
+
+```

@@ -1,0 +1,68 @@
+---
+title: "Smooth Random Effects"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{smooth: 02-Example}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: bibliography.bib
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Cholesterol Example
+
+```{r cholesterol exploratory}
+library(lme4)
+library(smoothLME)
+library(lattice)
+library(lcmm)
+data(Cholesterol, package = "qrLMM")
+Cholesterol$resp <- Cholesterol$cholst/100
+Cholesterol$time <- (Cholesterol$year - 5)/10
+Cholesterol.samp <- subset(Cholesterol, newid %in% 1:16)
+Cholesterol.samp$newid <- as.factor(Cholesterol.samp$newid)
+xyplot(cholst ~ year | newid, data = Cholesterol.samp,
+       type = c("p", "r"), lwd = 2, layout = c(4, 4),
+       as.table = TRUE, ylab = "Cholesterol", grid = TRUE,
+       xlab = "Time (years)")
+```
+
+
+## Mixed Model
+```{r cholesterol plain lme, echo=TRUE}
+mixmod <- lmer(resp ~1 + time + age + sex + (1 + time | ID), data = Cholesterol,
+            REML = FALSE)
+summary(mixmod)
+```
+## Smooth Mixed Model
+
+```{r cholesterol smooth lme, echo=TRUE}
+examp <- smoothmixed(resp ~ 1 + time + age + sex + (1 + time|ID), data = Cholesterol, 
+                     verbose = FALSE, n1 = 3, n2 = 3, maxiter = 3, rightskewed = c(T,F))
+oldpar <- par()
+par(mfrow=c(1,2))
+plotrandomeffects(examp, which = "intercept", xlab = "Intercept", ylab = "")
+plotrandomeffects(examp, which = "slope", xlab = "Slope", ylab = "")
+par(mfrow=oldpar$mfrow)
+```
+The coefficients in the fixed effects part of the model are given by
+```{r coefficients,echo=TRUE}
+examp$coef
+```
+and the probabilities of the mixture distribution are
+```{r probs,echo=TRUE}
+examp$crosstable
+```
+The mean profiles for a man with an age of 32 are plotted using the following lines of code
+
+```{r profplot,echo=TRUE}
+datnew <- data.frame(time = seq(0, 10, length = 100))
+datnew$sex <- 1
+datnew$age <- 32
+pred_lme <- predictY(examp$hlme, datnew, var.time = "time")
+plot(pred_lme, lwd = 2, type = "l", bty = "l", xlab = "Years", ylab = "Cholesterol",col=rep(c('blue','red','black'),each=3),lty=rep(1:3, times=3), lwd = 2)
+
+```
