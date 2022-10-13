@@ -1,0 +1,19 @@
+Package: smoothJM
+Type: Package
+Title: Survival models for longitudinal data with a Smooth Random Effects Distributions
+Version: 0.0.1
+Author: Berrie Zielman
+Maintainer: Berrie Zielman <berrie.zielman@gmail.com>
+Description: The smoothLME package implements methods for mixed models of longitudinal data. 
+             Longitudinal data, where data are recorded on a series of time points are often collected in
+             medicine, biology, pharmacokinetics and other fields. The mixed effects model incorporate both fixed effects and random effects. 
+             Usually, the random effects in a linear mixed model are drawn from a normal distribution, whereas more advanced models utilize a mixture distribution for the random effects<doi:10.1080/01621459.1996.10476679>. 
+             This package estimates a skewed distribution for the random effects, by imposing constraints on the component means and the probabilities of the mixture. 
+             The model contains the linear mixed model with a normal distribution for the random effects as a special case when the estimated distances between the means are zero.
+Depends: R (>= 3.0.0), survival
+Imports: lme4, lcmm, Matrix, methods, mvtnorm
+Suggests: knitr, rmarkdown, lattice, qrLMM
+VignetteBuilder: knitr
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
