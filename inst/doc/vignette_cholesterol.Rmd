@@ -12,6 +12,10 @@ bibliography: bibliography.bib
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=8, fig.height=4, fig.path='Figs/',
+                      echo=FALSE, warning=FALSE, message=FALSE)
+```
 ## Cholesterol Example
 
 ```{r cholesterol exploratory}
@@ -56,7 +60,7 @@ and the probabilities of the mixture distribution are
 ```{r probs,echo=TRUE}
 examp$crosstable
 ```
-The mean profiles for a man with an age of 32 are plotted using the following lines of code
+The mean profiles for a men with an age of 32 are plotted using the following lines of code
 
 ```{r profplot,echo=TRUE}
 datnew <- data.frame(time = seq(0, 10, length = 100))
