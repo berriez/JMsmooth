@@ -2,3 +2,4 @@
 .Rhistory
 .RData
 .Ruserdata
+echo .DS_Store >> .gitignore
